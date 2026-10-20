@@ -3,7 +3,7 @@
    ================================================ */
 
 /* ---- Config ---- */
-const SECRET_CODE = [1, 9, 9, 1]; // The year of the internet's birth (WWW 1991)
+let SECRET_CODE = [1, 9, 9, 1]; // có thể thay đổi qua nút ĐỔI MÃ
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
 
@@ -30,6 +30,16 @@ const attemptsDots    = document.getElementById('attemptsDots').querySelectorAll
 const hintText        = document.getElementById('hintText');
 const countdownEl     = document.getElementById('countdown');
 const clockEl         = document.getElementById('clock');
+
+/* ---- Modal DOM ---- */
+const btnChange    = document.getElementById('btnChange');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalClose   = document.getElementById('modalClose');
+const btnSaveCode  = document.getElementById('btnSaveCode');
+const modalMsg     = document.getElementById('modalMsg');
+const curInputs    = [0,1,2,3].map(i => document.getElementById(`cur${i}`));
+const newInputs    = [0,1,2,3].map(i => document.getElementById(`new${i}`));
+const conInputs    = [0,1,2,3].map(i => document.getElementById(`con${i}`));
 
 /* ================================================
    PARTICLE BACKGROUND
@@ -405,3 +415,116 @@ highlightDial();
 btnUnlock.addEventListener('click', tryUnlock);
 btnReset.addEventListener('click', resetAll);
 btnRelock.addEventListener('click', resetAll);
+
+/* ================================================
+   CHANGE CODE MODAL
+   ================================================ */
+function openModal() {
+  if (locked) return;
+  // Clear tất cả inputs
+  [...curInputs, ...newInputs, ...conInputs].forEach(inp => {
+    inp.value = '';
+    inp.classList.remove('filled');
+  });
+  setModalMsg('', '');
+  modalOverlay.style.display = 'flex';
+  setTimeout(() => curInputs[0].focus(), 100);
+}
+
+function closeModal() {
+  modalOverlay.style.display = 'none';
+}
+
+function setModalMsg(text, type) {
+  modalMsg.textContent = text;
+  modalMsg.className = 'modal-msg' + (type ? ' ' + type : '');
+}
+
+// Auto-focus next input khi nhập số
+function setupPinGroup(inputs) {
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('input', () => {
+      // Chỉ cho nhập số
+      inp.value = inp.value.replace(/[^0-9]/g, '').slice(-1);
+      if (inp.value) {
+        inp.classList.add('filled');
+        if (idx < inputs.length - 1) inputs[idx + 1].focus();
+      } else {
+        inp.classList.remove('filled');
+      }
+      setModalMsg('', '');
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && idx > 0) {
+        inputs[idx - 1].focus();
+        inputs[idx - 1].value = '';
+        inputs[idx - 1].classList.remove('filled');
+      }
+    });
+  });
+}
+
+setupPinGroup(curInputs);
+setupPinGroup(newInputs);
+setupPinGroup(conInputs);
+
+function saveNewCode() {
+  const cur = curInputs.map(i => parseInt(i.value));
+  const nw  = newInputs.map(i => parseInt(i.value));
+  const con = conInputs.map(i => parseInt(i.value));
+
+  // Kiểm tra điền đủ chưa
+  if (cur.some(isNaN) || nw.some(isNaN) || con.some(isNaN)) {
+    setModalMsg('⚠ Vui lòng điền đủ tất cả các ô!', 'error');
+    return;
+  }
+
+  // Kiểm tra mã hiện tại
+  if (!cur.every((v, i) => v === SECRET_CODE[i])) {
+    setModalMsg('✕ Mã hiện tại không đúng!', 'error');
+    curInputs.forEach(inp => { inp.value=''; inp.classList.remove('filled'); });
+    curInputs[0].focus();
+    return;
+  }
+
+  // Kiểm tra mã mới và xác nhận trùng khớp
+  if (!nw.every((v, i) => v === con[i])) {
+    setModalMsg('✕ Mã mới và xác nhận không khớp!', 'error');
+    conInputs.forEach(inp => { inp.value=''; inp.classList.remove('filled'); });
+    conInputs[0].focus();
+    return;
+  }
+
+  // Không cho đặt mã giống cũ
+  if (nw.every((v, i) => v === SECRET_CODE[i])) {
+    setModalMsg('⚠ Mã mới phải khác mã cũ!', 'error');
+    return;
+  }
+
+  // Lưu mã mới
+  SECRET_CODE.splice(0, 4, ...nw);
+  hintText.textContent = `Mã mới đã được đặt: ${nw.join(' - ')}`;
+  setModalMsg('✔ Đổi mã thành công! Vault đã được cập nhật.', 'success');
+  playSuccess();
+
+  // Tự động đóng modal sau 1.5 giây
+  setTimeout(() => {
+    closeModal();
+    resetAll();
+  }, 1500);
+}
+
+btnChange.addEventListener('click', openModal);
+btnSaveCode.addEventListener('click', saveNewCode);
+modalClose.addEventListener('click', closeModal);
+
+// Đóng modal khi click ra ngoài
+modalOverlay.addEventListener('click', e => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+// Enter để lưu khi đang trong modal
+modalOverlay.addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveNewCode();
+  if (e.key === 'Escape') closeModal();
+});
