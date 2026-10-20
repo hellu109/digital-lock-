@@ -1,0 +1,649 @@
+/* ================================================
+   VaultOS Digital Lock — style.css
+   ================================================ */
+
+/* ---------- Imports & Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cyan:    #00ffe7;
+  --cyan2:   #00bfff;
+  --green:   #39ff14;
+  --red:     #ff2244;
+  --gold:    #ffd700;
+  --bg:      #050a0f;
+  --surface: #0a1520;
+  --surface2:#0f1e2e;
+  --border:  rgba(0, 255, 231, 0.2);
+  --shadow-cyan: 0 0 20px rgba(0,255,231,0.4);
+  --shadow-red:  0 0 20px rgba(255,34,68,0.5);
+  --font-hud: 'Orbitron', monospace;
+  --font-mono:'Share Tech Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--cyan);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ---------- Particle Canvas ---------- */
+#particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Scanlines ---------- */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.08) 3px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: scanroll 8s linear infinite;
+}
+@keyframes scanroll {
+  from { background-position: 0 0; }
+  to   { background-position: 0 100%; }
+}
+
+/* ---------- Container ---------- */
+.container {
+  position: relative;
+  z-index: 2;
+  width: min(760px, 96vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 1.5rem 0;
+}
+
+/* ---------- Header ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.4rem;
+  background: rgba(0,20,35,0.8);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-hud);
+  font-weight: 900;
+  font-size: 1.3rem;
+  letter-spacing: 3px;
+}
+.logo-icon {
+  font-size: 1.5rem;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 8px var(--cyan));
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.accent { color: var(--gold); }
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+}
+.status-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink 1.2s step-start infinite;
+}
+.status-dot.locked { background: var(--red); box-shadow: 0 0 10px var(--red); }
+.status-dot.unlocked { background: var(--green); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.clock {
+  font-family: var(--font-hud);
+  font-size: 0.7rem;
+  color: rgba(0,255,231,0.6);
+  letter-spacing: 2px;
+}
+
+/* ---------- Warning Tape ---------- */
+.warning-tape {
+  background: repeating-linear-gradient(
+    -45deg,
+    #ffd700 0px, #ffd700 18px,
+    #1a1200 18px, #1a1200 36px
+  );
+  padding: 6px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.warning-tape span {
+  display: inline-block;
+  color: #000;
+  font-family: var(--font-hud);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  animation: marquee 18s linear infinite;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ---------- Lock Panel ---------- */
+.lock-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* ---------- Lock Body ---------- */
+.lock-body {
+  position: relative;
+  background: linear-gradient(160deg, #0c1a27 0%, #071018 100%);
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  box-shadow:
+    0 0 40px rgba(0,255,231,0.08),
+    0 0 0 1px rgba(0,255,231,0.05) inset,
+    0 8px 60px rgba(0,0,0,0.8);
+  overflow: hidden;
+  transition: box-shadow 0.4s;
+}
+.lock-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,255,231,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+.lock-body.unlocked-glow {
+  border-color: var(--green);
+  box-shadow: 0 0 60px rgba(57,255,20,0.3), 0 8px 60px rgba(0,0,0,0.8);
+}
+.lock-body.error-glow {
+  animation: errShake 0.5s ease;
+  border-color: var(--red);
+  box-shadow: 0 0 50px rgba(255,34,68,0.4), 0 8px 60px rgba(0,0,0,0.8);
+}
+@keyframes errShake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+
+/* --- Shackle --- */
+.shackle-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.4rem;
+}
+.shackle {
+  width: 90px;
+  height: 55px;
+  border: 7px solid #1e3a50;
+  border-bottom: none;
+  border-radius: 50px 50px 0 0;
+  box-shadow: 0 0 15px rgba(0,255,231,0.1);
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1), border-color 0.4s;
+  position: relative;
+}
+.shackle::before {
+  content: '';
+  position: absolute;
+  top: 5px; left: 5px; right: 5px; bottom: 0;
+  border: 3px solid transparent;
+  border-top: 3px solid rgba(0,255,231,0.15);
+  border-radius: 40px 40px 0 0;
+}
+.shackle.open {
+  transform: translateY(-50px) rotate(-35deg);
+  border-color: var(--green);
+  box-shadow: 0 0 20px rgba(57,255,20,0.5);
+}
+
+/* --- Lock Face --- */
+.lock-face {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* --- Display --- */
+.display-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.display-label {
+  font-family: var(--font-hud);
+  font-size: 0.6rem;
+  letter-spacing: 4px;
+  color: rgba(0,255,231,0.5);
+}
+.display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #020c14;
+  border: 1px solid rgba(0,255,231,0.3);
+  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  box-shadow: 0 0 20px rgba(0,255,231,0.08) inset, 0 0 0 1px rgba(0,255,231,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.display::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,231,0.5), transparent);
+}
+.digit-slot {
+  font-family: var(--font-hud);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 15px var(--cyan), 0 0 30px rgba(0,255,231,0.4);
+  min-width: 2.5rem;
+  text-align: center;
+  transition: all 0.15s;
+}
+.digit-slot.active { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+.digit-slot.correct { color: var(--green); text-shadow: 0 0 15px var(--green); }
+.digit-slot.wrong   { color: var(--red);   text-shadow: 0 0 15px var(--red); }
+.digit-sep {
+  font-family: var(--font-hud);
+  font-size: 2rem;
+  color: rgba(0,255,231,0.3);
+}
+
+/* --- Attempts bar --- */
+.attempts-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.attempts-label {
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: rgba(0,255,231,0.4);
+}
+.attempts-dots {
+  display: flex;
+  gap: 5px;
+}
+.attempt-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  transition: all 0.3s;
+}
+.attempt-dot.used {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+  transform: scale(0.7);
+}
+
+/* --- Dials --- */
+.dials-section {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dial-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.dial-label {
+  font-family: var(--font-hud);
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  color: rgba(0,255,231,0.4);
+}
+
+.dial-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dial-btn {
+  background: linear-gradient(135deg, #0f2535, #162d40);
+  border: 1px solid rgba(0,255,231,0.25);
+  color: var(--cyan);
+  font-size: 0.75rem;
+  width: 54px; height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-hud);
+}
+.dial-btn:hover {
+  background: rgba(0,255,231,0.15);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0,255,231,0.3);
+  transform: scale(1.05);
+}
+.dial-btn:active { transform: scale(0.95); }
+
+.dial-window {
+  width: 54px;
+  height: 58px;
+  overflow: hidden;
+  background: #020c14;
+  border: 2px solid rgba(0,255,231,0.4);
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0,255,231,0.1) inset;
+}
+.dial-window::before, .dial-window::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 16px;
+  z-index: 1;
+  pointer-events: none;
+}
+.dial-window::before {
+  top: 0;
+  background: linear-gradient(to bottom, #020c14, transparent);
+}
+.dial-window::after {
+  bottom: 0;
+  background: linear-gradient(to top, #020c14, transparent);
+}
+
+.dial-drum {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.18s cubic-bezier(0.23,1,0.32,1);
+}
+.drum-digit {
+  height: 58px;
+  width: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hud);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: rgba(0,255,231,0.3);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.drum-digit.active {
+  color: var(--cyan);
+  text-shadow: 0 0 12px var(--cyan), 0 0 25px rgba(0,255,231,0.4);
+}
+
+/* --- Actions --- */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-unlock {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(0,255,231,0.15), rgba(0,191,255,0.1));
+  border: 1.5px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-unlock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,255,231,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-unlock:hover {
+  box-shadow: 0 0 25px rgba(0,255,231,0.4), 0 0 60px rgba(0,255,231,0.15);
+  transform: translateY(-2px);
+}
+.btn-unlock:hover::before { opacity: 1; }
+.btn-unlock:active { transform: translateY(0) scale(0.97); }
+.btn-icon { font-size: 1rem; }
+
+.btn-reset {
+  background: transparent;
+  border: 1px solid rgba(0,255,231,0.25);
+  color: rgba(0,255,231,0.5);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-reset:hover {
+  border-color: rgba(0,255,231,0.6);
+  color: var(--cyan);
+  background: rgba(0,255,231,0.05);
+}
+
+/* --- Hint --- */
+.hint-section {
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(0,255,231,0.35);
+  border-top: 1px solid rgba(0,255,231,0.08);
+  padding-top: 0.8rem;
+  letter-spacing: 1px;
+}
+.hint-label {
+  color: var(--gold);
+  font-family: var(--font-hud);
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  margin-right: 6px;
+}
+
+/* ---- Access Granted Screen ---- */
+.access-screen, .lockout-screen {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn { from{opacity:0; transform:scale(0.96)} to{opacity:1; transform:scale(1)} }
+
+.access-screen {
+  background: linear-gradient(160deg, rgba(0,30,10,0.97), rgba(5,15,5,0.99));
+  border: 2px solid var(--green);
+  box-shadow: 0 0 60px rgba(57,255,20,0.25);
+}
+.access-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+.access-icon {
+  font-size: 3.5rem;
+  animation: bounce 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes bounce { from{transform:scale(0)} to{transform:scale(1)} }
+.access-title {
+  font-family: var(--font-hud);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green), 0 0 40px rgba(57,255,20,0.4);
+  letter-spacing: 4px;
+}
+.access-divider {
+  width: 200px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+}
+.access-message {
+  font-size: 0.85rem;
+  color: rgba(57,255,20,0.7);
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+.access-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.stat-label {
+  font-size: 0.5rem;
+  letter-spacing: 2px;
+  color: rgba(57,255,20,0.4);
+}
+.stat-value {
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  color: var(--green);
+}
+.stat-value.green { color: var(--green); text-shadow: 0 0 10px var(--green); }
+
+.btn-relock {
+  background: rgba(57,255,20,0.1);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+.btn-relock:hover {
+  background: rgba(57,255,20,0.2);
+  box-shadow: 0 0 20px rgba(57,255,20,0.3);
+}
+
+/* ---- Lockout Screen ---- */
+.lockout-screen {
+  background: linear-gradient(160deg, rgba(30,0,5,0.97), rgba(15,0,5,0.99));
+  border: 2px solid var(--red);
+  box-shadow: 0 0 60px rgba(255,34,68,0.25);
+}
+.lockout-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+}
+.lockout-icon { font-size: 3rem; animation: flicker 0.5s ease infinite alternate; }
+@keyframes flicker { from{opacity:1} to{opacity:0.5} }
+.lockout-title {
+  font-family: var(--font-hud);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red);
+  letter-spacing: 4px;
+}
+.lockout-divider {
+  width: 180px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+}
+.lockout-message {
+  font-size: 0.82rem;
+  color: rgba(255,34,68,0.7);
+  line-height: 1.7;
+}
+.countdown {
+  font-family: var(--font-hud);
+  font-size: 3.5rem;
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red);
+  font-weight: 900;
+}
+.lockout-sub {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(255,34,68,0.4);
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  text-align: center;
+  font-size: 0.62rem;
+  color: rgba(0,255,231,0.25);
+  letter-spacing: 2px;
+  padding: 0.5rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 500px) {
+  .dials-section { gap: 0.8rem; }
+  .dial-btn { width: 44px; height: 22px; font-size: 0.65rem; }
+  .dial-window { width: 44px; height: 48px; }
+  .drum-digit { height: 48px; width: 44px; font-size: 1.3rem; }
+  .digit-slot { font-size: 1.8rem; min-width: 2rem; }
+  .access-title, .lockout-title { font-size: 1.3rem; }
+}
