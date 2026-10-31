@@ -71,85 +71,32 @@
             </div>
           </div>
 
-          <!-- Dial Section -->
-          <div class="dials-section">
-            <div class="dial-group">
-              <div class="dial-wrapper" id="dial0">
-                <button class="dial-btn up" data-dial="0" data-dir="up" aria-label="Increase digit 1">▲</button>
-                <div class="dial-window">
-                  <div class="dial-drum" id="drum0">
-                    <div class="drum-digit">8</div>
-                    <div class="drum-digit">9</div>
-                    <div class="drum-digit active">0</div>
-                    <div class="drum-digit">1</div>
-                    <div class="drum-digit">2</div>
-                  </div>
-                </div>
-                <button class="dial-btn down" data-dial="0" data-dir="down" aria-label="Decrease digit 1">▼</button>
-              </div>
-              <div class="dial-label">I</div>
-            </div>
-
-            <div class="dial-group">
-              <div class="dial-wrapper" id="dial1">
-                <button class="dial-btn up" data-dial="1" data-dir="up" aria-label="Increase digit 2">▲</button>
-                <div class="dial-window">
-                  <div class="dial-drum" id="drum1">
-                    <div class="drum-digit">8</div>
-                    <div class="drum-digit">9</div>
-                    <div class="drum-digit active">0</div>
-                    <div class="drum-digit">1</div>
-                    <div class="drum-digit">2</div>
-                  </div>
-                </div>
-                <button class="dial-btn down" data-dial="1" data-dir="down" aria-label="Decrease digit 2">▼</button>
-              </div>
-              <div class="dial-label">II</div>
-            </div>
-
-            <div class="dial-group">
-              <div class="dial-wrapper" id="dial2">
-                <button class="dial-btn up" data-dial="2" data-dir="up" aria-label="Increase digit 3">▲</button>
-                <div class="dial-window">
-                  <div class="dial-drum" id="drum2">
-                    <div class="drum-digit">8</div>
-                    <div class="drum-digit">9</div>
-                    <div class="drum-digit active">0</div>
-                    <div class="drum-digit">1</div>
-                    <div class="drum-digit">2</div>
-                  </div>
-                </div>
-                <button class="dial-btn down" data-dial="2" data-dir="down" aria-label="Decrease digit 3">▼</button>
-              </div>
-              <div class="dial-label">III</div>
-            </div>
-
-            <div class="dial-group">
-              <div class="dial-wrapper" id="dial3">
-                <button class="dial-btn up" data-dial="3" data-dir="up" aria-label="Increase digit 4">▲</button>
-                <div class="dial-window">
-                  <div class="dial-drum" id="drum3">
-                    <div class="drum-digit">8</div>
-                    <div class="drum-digit">9</div>
-                    <div class="drum-digit active">0</div>
-                    <div class="drum-digit">1</div>
-                    <div class="drum-digit">2</div>
-                  </div>
-                </div>
-                <button class="dial-btn down" data-dial="3" data-dir="down" aria-label="Decrease digit 4">▼</button>
-              </div>
-              <div class="dial-label">IV</div>
+          <!-- Numeric Keypad -->
+          <div class="numpad-section">
+            <div class="numpad-label">ENTER ACCESS CODE</div>
+            <div class="numpad-grid" id="numpadGrid">
+              <button class="numpad-key" data-num="1" id="key1">1</button>
+              <button class="numpad-key" data-num="2" id="key2">2</button>
+              <button class="numpad-key" data-num="3" id="key3">3</button>
+              <button class="numpad-key" data-num="4" id="key4">4</button>
+              <button class="numpad-key" data-num="5" id="key5">5</button>
+              <button class="numpad-key" data-num="6" id="key6">6</button>
+              <button class="numpad-key" data-num="7" id="key7">7</button>
+              <button class="numpad-key" data-num="8" id="key8">8</button>
+              <button class="numpad-key" data-num="9" id="key9">9</button>
+              <button class="numpad-key numpad-clear" id="keyClear">⌫</button>
+              <button class="numpad-key" data-num="0" id="key0">0</button>
+              <button class="numpad-key numpad-enter" id="keyEnter">✓</button>
             </div>
           </div>
 
           <!-- Action Buttons -->
           <div class="actions">
-            <button class="btn-unlock" id="btnUnlock">
-              <span class="btn-icon">🔓</span>
-              <span>UNLOCK</span>
-            </button>
             <button class="btn-reset" id="btnReset">
               <span>↺ RESET</span>
+            </button>
+            <button class="btn-change" id="btnChange">
+              <span>🔑 ĐỔI MẬT KHẨU</span>
             </button>
           </div>
 
@@ -161,19 +108,75 @@
         </div>
       </div>
 
-      <!-- Access Granted Screen -->
+      <!-- Access Granted / Unlocked Dashboard -->
       <div class="access-screen" id="accessGranted" style="display:none;">
         <div class="access-content">
-          <div class="access-icon">🔓</div>
-          <h2 class="access-title">ACCESS GRANTED</h2>
-          <div class="access-divider"></div>
-          <p class="access-message">Welcome, Authorized User.<br/>Vault systems are now online.</p>
-          <div class="access-stats">
-            <div class="stat"><span class="stat-label">SECURITY LEVEL</span><span class="stat-value">MAXIMUM</span></div>
-            <div class="stat"><span class="stat-label">ENCRYPTION</span><span class="stat-value">AES-256</span></div>
-            <div class="stat"><span class="stat-label">STATUS</span><span class="stat-value green">UNLOCKED</span></div>
+          <!-- Header unlocked -->
+          <div class="unlocked-header">
+            <div class="unlocked-icon-wrap">
+              <div class="unlocked-ring"></div>
+              <span class="unlocked-icon">🔓</span>
+            </div>
+            <div>
+              <h2 class="access-title">ACCESS GRANTED</h2>
+              <p class="access-subtitle">Chào mừng, Người dùng được ủy quyền</p>
+            </div>
           </div>
-          <button class="btn-relock" id="btnRelock">🔒 RE-LOCK VAULT</button>
+
+          <div class="access-divider"></div>
+
+          <!-- Stats row -->
+          <div class="access-stats">
+            <div class="stat">
+              <span class="stat-label">BẢO MẬT</span>
+              <span class="stat-value">TỐI ĐA</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">MÃ HÓA</span>
+              <span class="stat-value">AES-256</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">TRẠNG THÁI</span>
+              <span class="stat-value green">MỞ KHÓA</span>
+            </div>
+          </div>
+
+          <!-- Info panel -->
+          <div class="unlocked-panel">
+            <div class="panel-row">
+              <span class="panel-icon">🛡️</span>
+              <span class="panel-text">Hệ thống vault đang hoạt động</span>
+              <span class="panel-badge ok">ONLINE</span>
+            </div>
+            <div class="panel-row">
+              <span class="panel-icon">🔐</span>
+              <span class="panel-text">Mã PIN 4 chữ số đang dùng</span>
+              <span class="panel-badge ok">ACTIVE</span>
+            </div>
+            <div class="panel-row">
+              <span class="panel-icon">⚙️</span>
+              <span class="panel-text">Bạn có thể đổi mật khẩu ngay bây giờ</span>
+              <span class="panel-badge warn">SẴN SÀNG</span>
+            </div>
+          </div>
+
+          <!-- Action buttons in unlocked state -->
+          <div class="unlocked-actions">
+            <button class="btn-change-unlocked" id="btnChangeUnlocked">
+              <span class="ua-icon">🔑</span>
+              <div class="ua-text">
+                <span class="ua-title">ĐỔI MẬT KHẨU</span>
+                <span class="ua-sub">Thay đổi mã PIN 4 số</span>
+              </div>
+            </button>
+            <button class="btn-relock" id="btnRelock">
+              <span class="ua-icon">🔒</span>
+              <div class="ua-text">
+                <span class="ua-title">KHÓA LẠI</span>
+                <span class="ua-sub">Đóng vault và khóa hệ thống</span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -194,6 +197,66 @@
     <footer class="footer">
       <span>VaultOS v2.4.1 · Military-Grade Encryption · <span class="accent">Digital Lock</span></span>
     </footer>
+  </div>
+
+  <!-- ============================================================
+       ĐỔI MẬT KHẨU — Modal với bàn phím số 3 bước
+       ============================================================ -->
+  <div class="chg-overlay" id="chgOverlay" style="display:none;">
+    <div class="chg-box">
+      <!-- Header -->
+      <div class="chg-header">
+        <span class="chg-icon">🔑</span>
+        <span class="chg-title">ĐỔI MẬT KHẨU</span>
+        <button class="chg-close" id="chgClose">✕</button>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="chg-steps">
+        <div class="chg-step active" id="step1Dot">
+          <div class="step-circle">1</div>
+          <span class="step-lbl">Mã hiện tại</span>
+        </div>
+        <div class="step-line" id="stepLine1"></div>
+        <div class="chg-step" id="step2Dot">
+          <div class="step-circle">2</div>
+          <span class="step-lbl">Mã mới</span>
+        </div>
+        <div class="step-line" id="stepLine2"></div>
+        <div class="chg-step" id="step3Dot">
+          <div class="step-circle">3</div>
+          <span class="step-lbl">Xác nhận</span>
+        </div>
+      </div>
+
+      <!-- PIN Display -->
+      <div class="chg-prompt" id="chgPrompt">Nhập mật khẩu hiện tại</div>
+      <div class="chg-display" id="chgDisplay">
+        <span class="chg-dot" id="cd0"></span>
+        <span class="chg-dot" id="cd1"></span>
+        <span class="chg-dot" id="cd2"></span>
+        <span class="chg-dot" id="cd3"></span>
+      </div>
+
+      <!-- Message -->
+      <div class="chg-msg" id="chgMsg"></div>
+
+      <!-- Numpad -->
+      <div class="chg-numpad">
+        <button class="chg-key" data-num="1">1</button>
+        <button class="chg-key" data-num="2">2</button>
+        <button class="chg-key" data-num="3">3</button>
+        <button class="chg-key" data-num="4">4</button>
+        <button class="chg-key" data-num="5">5</button>
+        <button class="chg-key" data-num="6">6</button>
+        <button class="chg-key" data-num="7">7</button>
+        <button class="chg-key" data-num="8">8</button>
+        <button class="chg-key" data-num="9">9</button>
+        <button class="chg-key chg-del" id="chgDel">⌫</button>
+        <button class="chg-key" data-num="0">0</button>
+        <button class="chg-key chg-ok" id="chgOk">✓</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

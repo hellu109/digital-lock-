@@ -3,43 +3,47 @@
    ================================================ */
 
 /* ---- Config ---- */
-let SECRET_CODE = [1, 9, 9, 1]; // có thể thay đổi qua nút ĐỔI MÃ
+let SECRET_CODE = [1, 9, 9, 1];
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
 
 /* ---- State ---- */
-let dialValues = [0, 0, 0, 0];
+let enteredDigits = [];
 let attempts = MAX_ATTEMPTS;
-let locked = false;
-let unlocked = false;
+let locked    = false;
+let unlocked  = false;
 let lockoutTimer = null;
 
-/* ---- DOM References ---- */
-const drums      = [0,1,2,3].map(i => document.getElementById(`drum${i}`));
-const displayDs  = [0,1,2,3].map(i => document.getElementById(`d${i}`));
-const btnUnlock  = document.getElementById('btnUnlock');
-const btnReset   = document.getElementById('btnReset');
-const btnRelock  = document.getElementById('btnRelock');
-const lockBody   = document.getElementById('lockBody');
-const shackle    = document.getElementById('shackle');
-const statusDot  = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-const accessGranted   = document.getElementById('accessGranted');
-const lockoutScreen   = document.getElementById('lockoutScreen');
-const attemptsDots    = document.getElementById('attemptsDots').querySelectorAll('.attempt-dot');
-const hintText        = document.getElementById('hintText');
-const countdownEl     = document.getElementById('countdown');
-const clockEl         = document.getElementById('clock');
-
-/* ---- Modal DOM ---- */
+/* ---- DOM ---- */
+const displayDs    = [0,1,2,3].map(i => document.getElementById(`d${i}`));
+const btnReset     = document.getElementById('btnReset');
+const btnRelock    = document.getElementById('btnRelock');
 const btnChange    = document.getElementById('btnChange');
-const modalOverlay = document.getElementById('modalOverlay');
-const modalClose   = document.getElementById('modalClose');
-const btnSaveCode  = document.getElementById('btnSaveCode');
-const modalMsg     = document.getElementById('modalMsg');
-const curInputs    = [0,1,2,3].map(i => document.getElementById(`cur${i}`));
-const newInputs    = [0,1,2,3].map(i => document.getElementById(`new${i}`));
-const conInputs    = [0,1,2,3].map(i => document.getElementById(`con${i}`));
+const btnChangeUnlocked = document.getElementById('btnChangeUnlocked');
+const lockBody     = document.getElementById('lockBody');
+const shackle      = document.getElementById('shackle');
+const statusDot    = document.getElementById('statusDot');
+const statusText   = document.getElementById('statusText');
+const accessGranted  = document.getElementById('accessGranted');
+const lockoutScreen  = document.getElementById('lockoutScreen');
+const attemptsDots   = document.getElementById('attemptsDots').querySelectorAll('.attempt-dot');
+const hintText       = document.getElementById('hintText');
+const countdownEl    = document.getElementById('countdown');
+const clockEl        = document.getElementById('clock');
+
+/* ---- Change Password Modal DOM ---- */
+const chgOverlay = document.getElementById('chgOverlay');
+const chgClose   = document.getElementById('chgClose');
+const chgPrompt  = document.getElementById('chgPrompt');
+const chgDots    = [0,1,2,3].map(i => document.getElementById(`cd${i}`));
+const chgMsg     = document.getElementById('chgMsg');
+const chgDel     = document.getElementById('chgDel');
+const chgOk      = document.getElementById('chgOk');
+const step1Dot   = document.getElementById('step1Dot');
+const step2Dot   = document.getElementById('step2Dot');
+const step3Dot   = document.getElementById('step3Dot');
+const stepLine1  = document.getElementById('stepLine1');
+const stepLine2  = document.getElementById('stepLine2');
 
 /* ================================================
    PARTICLE BACKGROUND
@@ -67,35 +71,28 @@ class Particle {
     this.maxLife = 0.6 + Math.random() * 0.4;
   }
   update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.life += 0.003;
-    if (this.life > this.maxLife || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-      this.reset();
-      this.life = 0;
-    }
+    this.x += this.vx; this.y += this.vy; this.life += 0.003;
+    if (this.life > this.maxLife || this.x < 0 || this.x > canvas.width ||
+        this.y < 0 || this.y > canvas.height) { this.reset(); this.life = 0; }
   }
   draw() {
     const alpha = Math.sin((this.life / this.maxLife) * Math.PI) * 0.6;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(0, 255, 231, ${alpha})`;
+    ctx.fillStyle = `rgba(0,255,231,${alpha})`;
     ctx.fill();
   }
 }
-
 for (let i = 0; i < 120; i++) particles.push(new Particle());
-
-// Draw connecting lines between nearby particles
 function drawConnections() {
   for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
+    for (let j = i+1; j < particles.length; j++) {
       const dx = particles[i].x - particles[j].x;
       const dy = particles[i].y - particles[j].y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < 90) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(0, 255, 231, ${(1 - dist/90) * 0.12})`;
+        ctx.strokeStyle = `rgba(0,255,231,${(1-dist/90)*0.12})`;
         ctx.lineWidth = 0.5;
         ctx.moveTo(particles[i].x, particles[i].y);
         ctx.lineTo(particles[j].x, particles[j].y);
@@ -104,7 +101,6 @@ function drawConnections() {
     }
   }
 }
-
 function animateParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawConnections();
@@ -118,125 +114,100 @@ animateParticles();
    ================================================ */
 function updateClock() {
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2,'0');
-  const mm = String(now.getMinutes()).padStart(2,'0');
-  const ss = String(now.getSeconds()).padStart(2,'0');
-  clockEl.textContent = `${hh}:${mm}:${ss}`;
+  clockEl.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
+    .map(n => String(n).padStart(2,'0')).join(':');
 }
 updateClock();
 setInterval(updateClock, 1000);
 
 /* ================================================
-   DIAL LOGIC
+   MAIN NUMPAD — NHẬP MẬT KHẨU
    ================================================ */
-function rotateDrum(dialIdx, direction) {
-  if (locked || unlocked) return;
-
-  // Update value
-  if (direction === 'up') {
-    dialValues[dialIdx] = (dialValues[dialIdx] + 1) % 10;
-  } else {
-    dialValues[dialIdx] = (dialValues[dialIdx] + 9) % 10;
+function updateDisplay() {
+  for (let i = 0; i < 4; i++) {
+    const slot = displayDs[i];
+    if (i < enteredDigits.length) {
+      slot.textContent = enteredDigits[i];
+      slot.classList.remove('wrong','correct');
+      slot.classList.add('active');
+    } else {
+      slot.textContent = '_';
+      slot.className = 'digit-slot';
+    }
   }
+}
 
-  // Animate drum
-  const drum = drums[dialIdx];
-  const allDigits = drum.querySelectorAll('.drum-digit');
-
-  // Clear active
-  allDigits.forEach(d => d.classList.remove('active'));
-
-  // Rebuild drum around current value
-  const val = dialValues[dialIdx];
-  const digits = [
-    (val + 8) % 10,
-    (val + 9) % 10,
-    val,
-    (val + 1) % 10,
-    (val + 2) % 10,
-  ];
-  allDigits.forEach((el, i) => {
-    el.textContent = digits[i];
-    if (i === 2) el.classList.add('active');
-  });
-
-  // Slide animation
-  const offset = direction === 'up' ? -58 : 58;
-  drum.style.transition = 'none';
-  drum.style.transform = `translateY(${offset}px)`;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      drum.style.transition = 'transform 0.18s cubic-bezier(0.23,1,0.32,1)';
-      drum.style.transform = 'translateY(0)';
-    });
-  });
-
-  // Update display
-  displayDs[dialIdx].textContent = val;
-  displayDs[dialIdx].classList.remove('correct','wrong');
-  displayDs[dialIdx].classList.add('active');
-  setTimeout(() => displayDs[dialIdx].classList.remove('active'), 300);
-
+function numpadPress(num) {
+  if (locked || unlocked) return;
+  if (enteredDigits.length >= 4) return;
+  enteredDigits.push(num);
+  updateDisplay();
   playClick();
 }
 
+function numpadClear() {
+  if (locked || unlocked) return;
+  if (!enteredDigits.length) return;
+  enteredDigits.pop();
+  updateDisplay();
+  playClick();
+}
+
+function numpadEnter() {
+  if (locked || unlocked) return;
+  if (enteredDigits.length < 4) {
+    lockBody.classList.add('error-glow');
+    setTimeout(() => lockBody.classList.remove('error-glow'), 400);
+    return;
+  }
+  tryUnlock();
+}
+
 /* ================================================
-   SOUND (Web Audio API - subtle clicks)
+   SOUND
    ================================================ */
 let audioCtx = null;
-
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-
 function playClick() {
   try {
-    const ac = getAudioCtx();
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.connect(gain);
-    gain.connect(ac.destination);
+    const ac = getAudioCtx(), osc = ac.createOscillator(), gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
     osc.type = 'square';
     osc.frequency.setValueAtTime(800, ac.currentTime);
     osc.frequency.exponentialRampToValueAtTime(200, ac.currentTime + 0.05);
     gain.gain.setValueAtTime(0.08, ac.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.05);
-    osc.start(ac.currentTime);
-    osc.stop(ac.currentTime + 0.05);
+    osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.05);
   } catch(e) {}
 }
-
 function playSuccess() {
   try {
     const ac = getAudioCtx();
-    [523, 659, 784, 1047].forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
+    [523,659,784,1047].forEach((freq,i) => {
+      const osc = ac.createOscillator(), gain = ac.createGain();
       osc.connect(gain); gain.connect(ac.destination);
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ac.currentTime + i * 0.12);
-      gain.gain.setValueAtTime(0.15, ac.currentTime + i * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + i * 0.12 + 0.25);
-      osc.start(ac.currentTime + i * 0.12);
-      osc.stop(ac.currentTime + i * 0.12 + 0.25);
+      osc.frequency.setValueAtTime(freq, ac.currentTime + i*0.12);
+      gain.gain.setValueAtTime(0.15, ac.currentTime + i*0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + i*0.12 + 0.25);
+      osc.start(ac.currentTime + i*0.12); osc.stop(ac.currentTime + i*0.12 + 0.25);
     });
   } catch(e) {}
 }
-
 function playError() {
   try {
     const ac = getAudioCtx();
-    [200, 150].forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
+    [200,150].forEach((freq,i) => {
+      const osc = ac.createOscillator(), gain = ac.createGain();
       osc.connect(gain); gain.connect(ac.destination);
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, ac.currentTime + i * 0.15);
-      gain.gain.setValueAtTime(0.12, ac.currentTime + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + i * 0.15 + 0.2);
-      osc.start(ac.currentTime + i * 0.15);
-      osc.stop(ac.currentTime + i * 0.15 + 0.2);
+      osc.frequency.setValueAtTime(freq, ac.currentTime + i*0.15);
+      gain.gain.setValueAtTime(0.12, ac.currentTime + i*0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + i*0.15 + 0.2);
+      osc.start(ac.currentTime + i*0.15); osc.stop(ac.currentTime + i*0.15 + 0.2);
     });
   } catch(e) {}
 }
@@ -246,11 +217,8 @@ function playError() {
    ================================================ */
 function tryUnlock() {
   if (locked || unlocked) return;
-
-  const isCorrect = dialValues.every((v, i) => v === SECRET_CODE[i]);
-
+  const isCorrect = enteredDigits.every((v,i) => v === SECRET_CODE[i]);
   if (isCorrect) {
-    // SUCCESS
     unlocked = true;
     displayDs.forEach(d => { d.classList.remove('active','wrong'); d.classList.add('correct'); });
     lockBody.classList.add('unlocked-glow');
@@ -258,30 +226,23 @@ function tryUnlock() {
     statusDot.classList.remove('locked'); statusDot.classList.add('unlocked');
     statusText.textContent = 'ACCESS GRANTED';
     playSuccess();
-
-    setTimeout(() => {
-      accessGranted.style.display = 'flex';
-    }, 700);
+    setTimeout(() => { accessGranted.style.display = 'flex'; }, 700);
   } else {
-    // FAIL
     attempts--;
     const dotIdx = MAX_ATTEMPTS - attempts - 1;
     if (attemptsDots[dotIdx]) attemptsDots[dotIdx].classList.add('used');
-
     displayDs.forEach(d => { d.classList.add('wrong'); d.classList.remove('active'); });
     lockBody.classList.add('error-glow');
     lockBody.classList.remove('unlocked-glow');
     statusText.textContent = `DENIED — ${attempts} ATTEMPTS LEFT`;
     playError();
-
     setTimeout(() => {
       lockBody.classList.remove('error-glow');
       displayDs.forEach(d => d.classList.remove('wrong'));
+      enteredDigits = [];
+      updateDisplay();
     }, 600);
-
-    if (attempts <= 0) {
-      setTimeout(() => startLockout(), 700);
-    }
+    if (attempts <= 0) setTimeout(() => startLockout(), 700);
   }
 }
 
@@ -293,20 +254,14 @@ function startLockout() {
   statusDot.classList.add('locked');
   statusText.textContent = 'SYSTEM LOCKED';
   lockoutScreen.style.display = 'flex';
-
   let remaining = LOCKOUT_SECONDS;
   countdownEl.textContent = remaining;
-
   lockoutTimer = setInterval(() => {
     remaining--;
     countdownEl.textContent = remaining;
-    if (remaining <= 0) {
-      clearInterval(lockoutTimer);
-      endLockout();
-    }
+    if (remaining <= 0) { clearInterval(lockoutTimer); endLockout(); }
   }, 1000);
 }
-
 function endLockout() {
   locked = false;
   lockoutScreen.style.display = 'none';
@@ -319,212 +274,213 @@ function endLockout() {
    RESET
    ================================================ */
 function resetAll() {
-  dialValues = [0, 0, 0, 0];
-  attempts   = MAX_ATTEMPTS;
-  unlocked   = false;
-
-  // Reset drums
-  drums.forEach((drum, i) => {
-    const allDigits = drum.querySelectorAll('.drum-digit');
-    const digits = [8, 9, 0, 1, 2];
-    allDigits.forEach((el, j) => {
-      el.textContent = digits[j];
-      el.classList.toggle('active', j === 2);
-    });
-    drum.style.transform = 'translateY(0)';
-  });
-
-  // Reset display
-  displayDs.forEach(d => {
-    d.textContent = '_';
-    d.className = 'digit-slot';
-  });
-
-  // Reset attempts dots
+  enteredDigits = [];
+  attempts  = MAX_ATTEMPTS;
+  unlocked  = false;
+  displayDs.forEach(d => { d.textContent = '_'; d.className = 'digit-slot'; });
   attemptsDots.forEach(dot => dot.classList.remove('used'));
-
-  // Reset lock body
   lockBody.classList.remove('unlocked-glow','error-glow');
   shackle.classList.remove('open');
   accessGranted.style.display = 'none';
   lockoutScreen.style.display = 'none';
-
   statusDot.classList.remove('locked','unlocked');
   statusText.textContent = 'SYSTEM ARMED';
 }
 
 /* ================================================
-   EVENT LISTENERS
+   MAIN NUMPAD EVENT LISTENERS
    ================================================ */
-document.querySelectorAll('.dial-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const dialIdx = parseInt(btn.dataset.dial);
-    const dir     = btn.dataset.dir;
-    rotateDrum(dialIdx, dir);
-  });
+document.querySelectorAll('.numpad-key[data-num]').forEach(btn => {
+  btn.addEventListener('click', () => numpadPress(parseInt(btn.dataset.num)));
 });
+document.getElementById('keyClear').addEventListener('click', numpadClear);
+document.getElementById('keyEnter').addEventListener('click', numpadEnter);
 
-// Keyboard support
 window.addEventListener('keydown', e => {
-  if (locked || unlocked) return;
-
-  const keyMap = {
-    'ArrowUp':    () => rotateDrum(activeDial, 'up'),
-    'ArrowDown':  () => rotateDrum(activeDial, 'down'),
-    'ArrowRight': () => { activeDial = Math.min(3, activeDial + 1); highlightDial(); },
-    'ArrowLeft':  () => { activeDial = Math.max(0, activeDial - 1); highlightDial(); },
-    'Enter':      () => tryUnlock(),
-    'r':          () => resetAll(),
-    'R':          () => resetAll(),
-  };
-
-  if (keyMap[e.key]) {
-    e.preventDefault();
-    keyMap[e.key]();
+  // Nếu modal đổi mật khẩu đang mở → dùng bàn phím cho modal
+  if (chgOverlay.style.display === 'flex') {
+    if (e.key >= '0' && e.key <= '9') { e.preventDefault(); chgNumpadPress(parseInt(e.key)); }
+    else if (e.key === 'Backspace') { e.preventDefault(); chgNumpadDel(); }
+    else if (e.key === 'Enter')     { e.preventDefault(); chgNumpadOk(); }
+    else if (e.key === 'Escape')    { closeChgModal(); }
+    return;
   }
+  if (locked || unlocked) return;
+  if (e.key >= '0' && e.key <= '9') { e.preventDefault(); numpadPress(parseInt(e.key)); }
+  else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); numpadClear(); }
+  else if (e.key === 'Enter') { e.preventDefault(); numpadEnter(); }
+  else if (e.key === 'r' || e.key === 'R') resetAll();
 });
 
-// Touch / swipe support on dials
-let touchStartY = 0;
-document.querySelectorAll('.dial-window').forEach((window_el, i) => {
-  window_el.addEventListener('touchstart', e => {
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  window_el.addEventListener('touchend', e => {
-    const dy = touchStartY - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 15) {
-      rotateDrum(i, dy > 0 ? 'up' : 'down');
-    }
-  });
-  // Mouse wheel support
-  window_el.addEventListener('wheel', e => {
-    e.preventDefault();
-    rotateDrum(i, e.deltaY > 0 ? 'down' : 'up');
-  }, { passive: false });
-});
-
-let activeDial = 0;
-function highlightDial() {
-  document.querySelectorAll('.dial-wrapper').forEach((w, i) => {
-    w.style.boxShadow = i === activeDial ? '0 0 15px rgba(0,255,231,0.4)' : '';
-    w.style.borderRadius = '10px';
-  });
-}
-highlightDial();
-
-btnUnlock.addEventListener('click', tryUnlock);
 btnReset.addEventListener('click', resetAll);
 btnRelock.addEventListener('click', resetAll);
 
 /* ================================================
-   CHANGE CODE MODAL
+   ĐỔI MẬT KHẨU — NUMPAD 3 BƯỚC
    ================================================ */
-function openModal() {
+
+// State đổi mật khẩu
+let chgStep = 1;           // 1 = nhập mã cũ, 2 = nhập mã mới, 3 = xác nhận mã mới
+let chgBuffer = [];        // số đang nhập trong modal
+let chgOldCode  = [];      // lưu mã cũ đã xác nhận
+let chgNewCode  = [];      // lưu mã mới đã nhập
+
+const STEP_PROMPTS = [
+  'Nhập mật khẩu hiện tại',
+  'Nhập mật khẩu mới (4 số)',
+  'Nhập lại mật khẩu mới để xác nhận',
+];
+
+function openChgModal() {
   if (locked) return;
-  // Clear tất cả inputs
-  [...curInputs, ...newInputs, ...conInputs].forEach(inp => {
-    inp.value = '';
-    inp.classList.remove('filled');
-  });
-  setModalMsg('', '');
-  modalOverlay.style.display = 'flex';
-  setTimeout(() => curInputs[0].focus(), 100);
+  chgStep   = 1;
+  chgBuffer = [];
+  chgOldCode  = [];
+  chgNewCode  = [];
+  updateChgDisplay();
+  updateChgSteps();
+  chgMsg.textContent = '';
+  chgMsg.className = 'chg-msg';
+  chgOverlay.style.display = 'flex';
 }
 
-function closeModal() {
-  modalOverlay.style.display = 'none';
+function closeChgModal() {
+  chgOverlay.style.display = 'none';
 }
 
-function setModalMsg(text, type) {
-  modalMsg.textContent = text;
-  modalMsg.className = 'modal-msg' + (type ? ' ' + type : '');
-}
-
-// Auto-focus next input khi nhập số
-function setupPinGroup(inputs) {
-  inputs.forEach((inp, idx) => {
-    inp.addEventListener('input', () => {
-      // Chỉ cho nhập số
-      inp.value = inp.value.replace(/[^0-9]/g, '').slice(-1);
-      if (inp.value) {
-        inp.classList.add('filled');
-        if (idx < inputs.length - 1) inputs[idx + 1].focus();
-      } else {
-        inp.classList.remove('filled');
-      }
-      setModalMsg('', '');
-    });
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !inp.value && idx > 0) {
-        inputs[idx - 1].focus();
-        inputs[idx - 1].value = '';
-        inputs[idx - 1].classList.remove('filled');
-      }
-    });
+/** Cập nhật 4 chấm trong modal */
+function updateChgDisplay() {
+  chgDots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < chgBuffer.length);
+    dot.classList.remove('error', 'success');
   });
 }
 
-setupPinGroup(curInputs);
-setupPinGroup(newInputs);
-setupPinGroup(conInputs);
+/** Cập nhật step indicators */
+function updateChgSteps() {
+  [step1Dot, step2Dot, step3Dot].forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i + 1 < chgStep)      el.classList.add('done');
+    else if (i + 1 === chgStep) el.classList.add('active');
+  });
+  stepLine1.classList.toggle('done', chgStep > 1);
+  stepLine2.classList.toggle('done', chgStep > 2);
+  chgPrompt.textContent = STEP_PROMPTS[chgStep - 1];
+}
 
-function saveNewCode() {
-  const cur = curInputs.map(i => parseInt(i.value));
-  const nw  = newInputs.map(i => parseInt(i.value));
-  const con = conInputs.map(i => parseInt(i.value));
-
-  // Kiểm tra điền đủ chưa
-  if (cur.some(isNaN) || nw.some(isNaN) || con.some(isNaN)) {
-    setModalMsg('⚠ Vui lòng điền đủ tất cả các ô!', 'error');
-    return;
-  }
-
-  // Kiểm tra mã hiện tại
-  if (!cur.every((v, i) => v === SECRET_CODE[i])) {
-    setModalMsg('✕ Mã hiện tại không đúng!', 'error');
-    curInputs.forEach(inp => { inp.value=''; inp.classList.remove('filled'); });
-    curInputs[0].focus();
-    return;
-  }
-
-  // Kiểm tra mã mới và xác nhận trùng khớp
-  if (!nw.every((v, i) => v === con[i])) {
-    setModalMsg('✕ Mã mới và xác nhận không khớp!', 'error');
-    conInputs.forEach(inp => { inp.value=''; inp.classList.remove('filled'); });
-    conInputs[0].focus();
-    return;
-  }
-
-  // Không cho đặt mã giống cũ
-  if (nw.every((v, i) => v === SECRET_CODE[i])) {
-    setModalMsg('⚠ Mã mới phải khác mã cũ!', 'error');
-    return;
-  }
-
-  // Lưu mã mới
-  SECRET_CODE.splice(0, 4, ...nw);
-  hintText.textContent = `Mã mới đã được đặt: ${nw.join(' - ')}`;
-  setModalMsg('✔ Đổi mã thành công! Vault đã được cập nhật.', 'success');
-  playSuccess();
-
-  // Tự động đóng modal sau 1.5 giây
+/** Flash lỗi — rung đỏ */
+function chgFlashError(msg) {
+  chgDots.forEach(d => { d.classList.add('error'); d.classList.remove('filled'); });
+  chgMsg.textContent = msg;
+  chgMsg.className = 'chg-msg error';
   setTimeout(() => {
-    closeModal();
-    resetAll();
-  }, 1500);
+    chgBuffer = [];
+    updateChgDisplay();
+  }, 700);
 }
 
-btnChange.addEventListener('click', openModal);
-btnSaveCode.addEventListener('click', saveNewCode);
-modalClose.addEventListener('click', closeModal);
+/** Flash thành công — xanh lá */
+function chgFlashSuccess(msg, cb) {
+  chgDots.forEach(d => d.classList.add('success'));
+  chgMsg.textContent = msg;
+  chgMsg.className = 'chg-msg success';
+  setTimeout(cb, 900);
+}
 
-// Đóng modal khi click ra ngoài
-modalOverlay.addEventListener('click', e => {
-  if (e.target === modalOverlay) closeModal();
-});
+/** Nhập 1 số vào modal */
+function chgNumpadPress(num) {
+  if (chgBuffer.length >= 4) return;
+  chgBuffer.push(num);
+  updateChgDisplay();
+  playClick();
+}
 
-// Enter để lưu khi đang trong modal
-modalOverlay.addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveNewCode();
-  if (e.key === 'Escape') closeModal();
+/** Xóa 1 số trong modal */
+function chgNumpadDel() {
+  if (!chgBuffer.length) return;
+  chgBuffer.pop();
+  updateChgDisplay();
+  playClick();
+}
+
+/** Nhấn ✓ trong modal — xử lý từng bước */
+function chgNumpadOk() {
+  if (chgBuffer.length < 4) {
+    // Chưa đủ 4 số
+    chgMsg.textContent = '⚠ Cần nhập đủ 4 chữ số!';
+    chgMsg.className = 'chg-msg error';
+    return;
+  }
+
+  if (chgStep === 1) {
+    // Bước 1: kiểm tra mật khẩu hiện tại
+    if (chgBuffer.every((v, i) => v === SECRET_CODE[i])) {
+      chgOldCode = [...chgBuffer];
+      chgFlashSuccess('✔ Mật khẩu đúng!', () => {
+        chgStep = 2;
+        chgBuffer = [];
+        updateChgDisplay();
+        updateChgSteps();
+        chgMsg.textContent = '';
+        chgMsg.className = 'chg-msg';
+      });
+    } else {
+      chgFlashError('✕ Mật khẩu hiện tại không đúng!');
+    }
+
+  } else if (chgStep === 2) {
+    // Bước 2: nhập mật khẩu mới
+    if (chgBuffer.every((v, i) => v === SECRET_CODE[i])) {
+      chgFlashError('⚠ Mật khẩu mới phải khác mật khẩu cũ!');
+      return;
+    }
+    chgNewCode = [...chgBuffer];
+    chgFlashSuccess('✔ Mật khẩu mới đã lưu tạm!', () => {
+      chgStep = 3;
+      chgBuffer = [];
+      updateChgDisplay();
+      updateChgSteps();
+      chgMsg.textContent = '';
+      chgMsg.className = 'chg-msg';
+    });
+
+  } else if (chgStep === 3) {
+    // Bước 3: xác nhận mật khẩu mới
+    if (chgBuffer.every((v, i) => v === chgNewCode[i])) {
+      // Thành công — lưu mã mới
+      SECRET_CODE.splice(0, 4, ...chgNewCode);
+      hintText.textContent = `Mật khẩu mới: ${chgNewCode.join(' - ')}`;
+      chgFlashSuccess('✔ Đổi mật khẩu thành công!', () => {
+        closeChgModal();
+        playSuccess();
+        // Nếu đang ở màn hình mở khóa thì giữ nguyên dashboard
+        if (!unlocked) resetAll();
+      });
+    } else {
+      chgFlashError('✕ Xác nhận không khớp! Thử lại.');
+      setTimeout(() => {
+        // Quay lại bước 2
+        chgStep = 2;
+        chgBuffer = [];
+        chgNewCode = [];
+        updateChgDisplay();
+        updateChgSteps();
+        chgMsg.textContent = '';
+        chgMsg.className = 'chg-msg';
+      }, 1100);
+    }
+  }
+}
+
+/* ---- Gán events cho modal ---- */
+document.querySelectorAll('.chg-key[data-num]').forEach(btn => {
+  btn.addEventListener('click', () => chgNumpadPress(parseInt(btn.dataset.num)));
 });
+chgDel.addEventListener('click', chgNumpadDel);
+chgOk.addEventListener('click', chgNumpadOk);
+chgClose.addEventListener('click', closeChgModal);
+chgOverlay.addEventListener('click', e => { if (e.target === chgOverlay) closeChgModal(); });
+
+/* ---- Nút ĐỔI MẬT KHẨU (cả 2 vị trí) ---- */
+btnChange.addEventListener('click', openChgModal);
+btnChangeUnlocked.addEventListener('click', openChgModal);
